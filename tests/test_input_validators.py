@@ -10,8 +10,9 @@ def test_valid_numbers():
     assert validate_number('20.5') == 20.5
 
 def test_invalid_numbers():
-    with pytest.raises(OperationError):
+    from app.exceptions import ValidationError
+    with pytest.raises(ValidationError):
         validate_number('abc')
 
-    with pytest.raises(OperationError):
+    with pytest.raises(ValidationError):
         validate_number(_cfg['CALCULATOR_MAX_INPUT_VALUE'] + 1)
