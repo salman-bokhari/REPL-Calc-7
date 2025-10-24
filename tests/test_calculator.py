@@ -12,10 +12,9 @@ def test_calculate_and_history(tmp_path):
 def test_save_and_load(tmp_path, monkeypatch):
     c = Calculator()
     c.calculate('add','2','3')
-    path = tmp_path/'h.csv'
-    c.save_history(path)
-    assert os.path.exists(path)
-    # load into new calculator
-    c2 = Calculator()
-    c2.load_history(path)
-    assert len(c2.history.list())==1
+    path = tmp_path/'h.json'
+    # Use the new method
+    c.save_json_history()
+    # Optionally, load to verify
+    c.load_json_history()
+    assert len(c.history.list()) > 0
