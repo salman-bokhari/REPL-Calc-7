@@ -1,4 +1,5 @@
-python-dotenv
-pandas
 pytest
 pytest-cov
+pandas
+python-dotenv
+colorama
