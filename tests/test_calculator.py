@@ -1,3 +1,4 @@
+import json
 import pytest
 from app.calculator import Calculator
 from app.exceptions import OperationError
