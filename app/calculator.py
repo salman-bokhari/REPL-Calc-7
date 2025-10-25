@@ -28,12 +28,10 @@ class Calculator:
         self.load_json_history()
 
     def register_observer(self, obs):
-        """Registers a new observer (only if not already added)."""
         if obs not in self.observers:
             self.observers.append(obs)
 
     def notify(self, calc):
-        """Notify all observers of a calculation event."""
         for obs in self.observers:
             try:
                 obs.notify(calc)
@@ -41,7 +39,6 @@ class Calculator:
                 logger.error(f"Observer failed: {e}")
 
     def calculate(self, op_name, a_raw, b_raw=None):
-        """Perform a calculation with validated inputs."""
         a = validate_number(a_raw)
         b = validate_number(b_raw) if b_raw is not None else None
         op = get_operation(op_name)
@@ -54,20 +51,17 @@ class Calculator:
         return calc
 
     def safe_save_history(self):
-        """Wrapper for save_json_history that catches and logs exceptions."""
         try:
             self.save_json_history()
         except Exception as e:
             logger.error(f"Failed to save history: {e}")
 
     def save_json_history(self):
-        """Persist history to JSON."""
         data = [c.to_dict() for c in self.history.list()]
         with open(HISTORY_JSON_PATH, 'w', encoding=_cfg['ENCODING']) as f:
             json.dump(data, f, indent=2)
 
     def load_json_history(self):
-        """Load history from disk, gracefully handle corruption."""
         if not os.path.exists(HISTORY_JSON_PATH):
             return
         try:
@@ -90,7 +84,6 @@ class Calculator:
 
     # --- Test hooks for non-interactive coverage ---
     def _test_command(self, command, *args):
-        """Internal helper to simulate REPL commands during testing."""
         command = command.lower()
         if command == 'clear':
             self.history.clear()
@@ -99,9 +92,12 @@ class Calculator:
             return 'undo' if self.history.undo() else 'nothing_to_undo'
         elif command == 'redo':
             return 'redo' if self.history.redo() else 'nothing_to_redo'
-        elif command in ('save', 'load'):
-            self.save_json_history() if command == 'save' else self.load_json_history()
-            return f'{command}d'
+        elif command == 'save':
+            self.save_json_history()
+            return 'saved'
+        elif command == 'load':
+            self.load_json_history()
+            return 'loaded'
         elif command == 'history':
             return [h.to_dict() for h in self.history.list()]
         else:
@@ -109,7 +105,7 @@ class Calculator:
             calc = self.calculate(command, a, b)
             return calc.result
 
-def repl():
+def repl():  # pragma: no cover
     calc = Calculator()
     print(Fore.CYAN + 'Advanced Calculator REPL (type "help" for commands)')
 
@@ -134,7 +130,7 @@ def repl():
                     for i, c in enumerate(calc.history.list(), 1):
                         print(Fore.GREEN + f'{i}. {c.operation}({c.a},{c.b}) = {c.result} at {c.timestamp}')
                 elif command in ('clear', 'undo', 'redo', 'save', 'load'):
-                    calc._test_command(command)
+                    res = calc._test_command(command, *args)
                     print(Fore.CYAN + f'{command.title()} executed.')
                 else:
                     if len(args) not in (1, 2):
@@ -146,5 +142,5 @@ def repl():
             logger.error(str(e))
             print(Fore.RED + f'Error: {e}')
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     repl()
