@@ -68,7 +68,7 @@ def test_save_load_history(tmp_path):
     calc = Calculator()
     calc.history.clear()
     calc.calculate('add', 2, 3)
-    # Use default path since save_json_history() does not take argument
-    calc.save_json_history()  
+    calc.save_json_history()
+    calc.history.clear()  # ✅ Clear before reloading
     calc.load_json_history()
     assert len(calc.history.list()) == 1
