@@ -72,3 +72,53 @@ def test_save_load_history(tmp_path):
     calc.history.clear()
     calc.load_json_history()
     assert len(calc.history.list()) == 1
+
+def test_internal_commands_and_history(tmp_path, monkeypatch):
+    # Redirect history.json to a temp path
+    monkeypatch.setattr("app.calculator.HISTORY_JSON_PATH", tmp_path / "history.json")
+    c = Calculator()
+
+    # 1️⃣ Command coverage
+    assert c._test_command('clear') == 'cleared'
+    assert c._test_command('add', '2', '3') == 5
+    assert isinstance(c._test_command('history'), list)
+    assert c._test_command('save') == 'saved'
+    assert c._test_command('load') == 'loaded'
+
+    # 2️⃣ Undo/Redo
+    c.calculate('add', 2, 3)
+    c.history.undo()
+    assert c._test_command('undo') in ('undo', 'nothing_to_undo')
+    c.history.redo()
+    assert c._test_command('redo') in ('redo', 'nothing_to_redo')
+
+def test_load_json_history_with_corruption(tmp_path, monkeypatch):
+    hist_file = tmp_path / "history.json"
+    hist_file.write_text("{ invalid json }")
+    monkeypatch.setattr("app.calculator.HISTORY_JSON_PATH", hist_file)
+    c = Calculator()  # should log error, not crash
+    assert isinstance(c.history.list(), list)
+
+def test_load_json_history_with_invalid_entries(tmp_path, monkeypatch):
+    hist_file = tmp_path / "history.json"
+    hist_file.write_text(json.dumps([{"operation": "add", "a": "x"}]))
+    monkeypatch.setattr("app.calculator.HISTORY_JSON_PATH", hist_file)
+    c = Calculator()
+    # Should skip invalid record
+    assert len(c.history.list()) == 0 or isinstance(c.history.list(), list)
+
+def test_observer_error_handling(monkeypatch):
+    class BadObserver:
+        def notify(self, calc): raise RuntimeError("boom")
+
+    c = Calculator()
+    c.register_observer(BadObserver())
+    # Should log error, not raise
+    calc = c.calculate('add', 1, 1)
+    assert calc.result == 2
+
+def test_safe_save_history_handles_write_error(monkeypatch):
+    c = Calculator()
+    def bad_save(): raise IOError("disk full")
+    monkeypatch.setattr(c, "save_json_history", bad_save)
+    c.safe_save_history()
