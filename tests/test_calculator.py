@@ -69,6 +69,6 @@ def test_save_load_history(tmp_path):
     calc.history.clear()
     calc.calculate('add', 2, 3)
     calc.save_json_history()
-    calc.history.clear()  # ✅ Clear before reloading
+    calc.history.clear()
     calc.load_json_history()
     assert len(calc.history.list()) == 1

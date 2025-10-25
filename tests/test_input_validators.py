@@ -15,6 +15,5 @@ def test_invalid_numbers():
     with pytest.raises(ValidationError):
         validate_number('abc')
 
-    # ✅ Simply test an extreme number
     with pytest.raises(ValidationError):
-        validate_number(1e1000)  # Infinity-like input
+        validate_number(1e1000)
